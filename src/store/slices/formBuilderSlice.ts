@@ -113,7 +113,6 @@ export const {
   updateFieldInCurrentForm,
   deleteFieldFromCurrentForm,
   createNewForm,
-  // Export the new action
   reorderFormFields
 } = formBuilderSlice.actions;
 

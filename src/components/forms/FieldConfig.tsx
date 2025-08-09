@@ -33,6 +33,8 @@ interface FieldConfigProps {
 const FieldConfig: React.FC<FieldConfigProps> = ({ field, index, allFields, dragHandleProps }) => {
   const dispatch = useDispatch();
   const [showValidations, setShowValidations] = useState(false);
+  // ADD THIS LINE - New state for managing options input
+  const [optionsInput, setOptionsInput] = useState(field.options?.join(', ') || '');
 
   const updateField = (updates: Partial<FormField>) => {
     dispatch(updateFieldInCurrentForm({ 
@@ -121,15 +123,24 @@ const FieldConfig: React.FC<FieldConfigProps> = ({ field, index, allFields, drag
           />
         </Box>
 
+        {/* REPLACE THE EXISTING OPTIONS SECTION WITH THIS */}
         {['select', 'radio', 'checkbox'].includes(field.type) && (
           <Box mt={2}>
             <TextField
               fullWidth
               label="Options (comma separated)"
-              value={field.options?.join(', ') || ''}
-              onChange={(e) => updateField({ 
-                options: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-              })}
+              value={optionsInput}
+              onChange={(e) => {
+                setOptionsInput(e.target.value);
+                // Only update the field when there's a complete comma-separated value
+                const options = e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean);
+                updateField({ options });
+              }}
+              onBlur={() => {
+                // Process final value on blur to ensure consistency
+                const options = optionsInput.split(',').map((s: string) => s.trim()).filter(Boolean);
+                updateField({ options });
+              }}
               helperText="Enter options separated by commas"
             />
           </Box>

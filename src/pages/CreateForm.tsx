@@ -116,7 +116,20 @@ const CreateForm: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+      <Box 
+        display="flex" 
+        justifyContent="space-between" 
+        alignItems="center" 
+        mb={4}
+        sx={{
+          position: 'sticky',
+          top: 0,
+          backgroundColor: 'white',
+          zIndex: 1000,
+          paddingY: 2,
+          borderBottom: '1px solid #e0e0e0'
+        }}
+      >
         <Typography variant="h4">
           {currentForm?.name ? `Edit: ${currentForm.name}` : 'Create New Form'}
         </Typography>

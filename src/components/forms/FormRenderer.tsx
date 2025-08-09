@@ -45,11 +45,45 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form }) => {
     dispatch(updateFormField({ fieldId, value }));
   };
 
+  // NEW HELPER FUNCTION: Get maxLength from field validations
+  const getMaxLength = (field: FormField): number | undefined => {
+    const maxLengthValidation = field.validations?.find(v => v.type === 'maxLength');
+    return maxLengthValidation?.value ? Number(maxLengthValidation.value) : undefined;
+  };
+
+  // NEW HELPER FUNCTION: Handle input with maxLength restriction
+  const handleInputWithMaxLength = (field: FormField, newValue: string) => {
+    const maxLength = getMaxLength(field);
+    if (maxLength && newValue.length > maxLength) {
+      // Option A: Hard stop - don't allow input beyond maxLength
+      return;
+    }
+    handleFieldChange(field.id, newValue);
+  };
+
+  // NEW HELPER FUNCTION: Generate character counter helper text
+  const getHelperTextWithCounter = (field: FormField, value: string, error?: string): string => {
+    const maxLength = getMaxLength(field);
+    if (!maxLength) {
+      return error || '';
+    }
+
+    const currentLength = (value || '').length;
+    const counterText = `${currentLength}/${maxLength} characters`;
+    
+    if (error) {
+      return `${error} • ${counterText}`;
+    }
+    
+    return counterText;
+  };
+
   const renderField = (field: FormField) => {
     const value = field.isDerived 
       ? calculateDerivedValue(field, formData) 
       : formData[field.id] || field.defaultValue || '';
     const error = formErrors[field.id];
+    const maxLength = getMaxLength(field);
 
     switch (field.type) {
       case 'text':
@@ -60,11 +94,24 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form }) => {
             label={field.label}
             type={field.type}
             value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onChange={(e) => {
+              // Apply maxLength restriction for text fields only (not number fields)
+              if (field.type === 'text' && maxLength) {
+                handleInputWithMaxLength(field, e.target.value);
+              } else {
+                handleFieldChange(field.id, e.target.value);
+              }
+            }}
             error={!!error}
-            helperText={error}
+            helperText={field.type === 'text' ? getHelperTextWithCounter(field, value, error) : error}
             required={field.required}
             disabled={field.isDerived}
+            // Add visual feedback with color change when approaching limit
+            sx={field.type === 'text' && maxLength ? {
+              '& .MuiFormHelperText-root': {
+                color: value.length > maxLength * 0.9 ? 'warning.main' : value.length === maxLength ? 'error.main' : 'text.secondary'
+              }
+            } : {}}
           />
         );
 
@@ -76,11 +123,17 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form }) => {
             rows={4}
             label={field.label}
             value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            onChange={(e) => handleInputWithMaxLength(field, e.target.value)}
             error={!!error}
-            helperText={error}
+            helperText={getHelperTextWithCounter(field, value, error)}
             required={field.required}
             disabled={field.isDerived}
+            // Add visual feedback with color change when approaching limit
+            sx={maxLength ? {
+              '& .MuiFormHelperText-root': {
+                color: value.length > maxLength * 0.9 ? 'warning.main' : value.length === maxLength ? 'error.main' : 'text.secondary'
+              }
+            } : {}}
           />
         );
 

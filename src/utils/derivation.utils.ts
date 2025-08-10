@@ -66,6 +66,7 @@ export const calculateDerivedValue = (
 
     // Try to evaluate the formula
     try {
+      /* eslint-disable no-eval */
       const result = eval(formula);
       
       // Handle different result types

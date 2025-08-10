@@ -1,15 +1,12 @@
 import { FormField } from '../types/form.types';
 
 export const validateField = (field: FormField, value: any): string | null => {
-  // FIRST: Check if field is required (independent of validation rules)
-  // This ensures ALL required fields are validated regardless of validation rules array
   if (field.required && !field.isDerived) {
     if (isEmpty(value)) {
       return `${field.label} is required`;
     }
   }
 
-  // SECOND: Process all validation rules in field.validations array
   for (const validation of field.validations) {
     switch (validation.type) {
       case 'required':
@@ -48,17 +45,14 @@ export const validateField = (field: FormField, value: any): string | null => {
  * Handles all possible empty states for different field types
  */
 const isEmpty = (value: any): boolean => {
-  // Handle null, undefined
   if (value === null || value === undefined) {
     return true;
   }
   
-  // Handle empty string
   if (typeof value === 'string' && value.trim() === '') {
     return true;
   }
   
-  // Handle empty array (for checkbox fields)
   if (Array.isArray(value) && value.length === 0) {
     return true;
   }

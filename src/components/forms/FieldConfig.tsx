@@ -15,12 +15,12 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-import {
-  Delete as DeleteIcon,
-  DragIndicator as DragIcon,
-  Add as AddIcon
-} from '@mui/icons-material';
+import CopyIcon from '@mui/icons-material/ContentCopy';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DragIcon from '@mui/icons-material/DragIndicator';
+import AddIcon from '@mui/icons-material/Add';
 import { FormField, ValidationRule } from '../../types/form.types';
+import { validateDerivationFormula } from '../../utils/derivation.utils';
 import { updateFieldInCurrentForm, deleteFieldFromCurrentForm } from '../../store/slices/formBuilderSlice';
 
 interface FieldConfigProps {
@@ -33,9 +33,8 @@ interface FieldConfigProps {
 const FieldConfig: React.FC<FieldConfigProps> = ({ field, index, allFields, dragHandleProps }) => {
   const dispatch = useDispatch();
   const [showValidations, setShowValidations] = useState(false);
-  // ADD THIS LINE - New state for managing options input
   const [optionsInput, setOptionsInput] = useState(field.options?.join(', ') || '');
-
+  const [formulaError, setFormulaError] = useState<string>('');
   const updateField = (updates: Partial<FormField>) => {
     dispatch(updateFieldInCurrentForm({ 
       index, 
@@ -64,6 +63,31 @@ const FieldConfig: React.FC<FieldConfigProps> = ({ field, index, allFields, drag
       validations: field.validations.filter((_, i) => i !== validationIndex)
     });
   };
+
+  const validateFormula = (formula: string) => {
+    if (!field.parentFields?.length) {
+      setFormulaError('');
+      return;
+    }
+    
+    const error = validateDerivationFormula(formula, field.parentFields, allFields);
+    setFormulaError(error || '');
+  };
+
+  const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    // Optional: You could add a toast notification here if you have one
+  } catch (err) {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+  }
+};
 
   return (
     <Card sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
@@ -177,17 +201,73 @@ const FieldConfig: React.FC<FieldConfigProps> = ({ field, index, allFields, drag
               >
                 {allFields.filter(f => f.id !== field.id && !f.isDerived).map((f) => (
                   <MenuItem key={f.id} value={f.id}>
-                    {f.label}
+                    {f.label} (ID: {f.id})
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
+            
+            {/* Show selected parent field IDs for reference */}
+            {field.parentFields && field.parentFields.length > 0 && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Available Field IDs for Formula:
+                </Typography>
+                {field.parentFields.map((parentId) => {
+                  const parentField = allFields.find(f => f.id === parentId);
+                  return (
+                    <Box key={parentId} sx={{ 
+                      mb: 0.5, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="body2" component="code" sx={{ 
+                          bgcolor: '#e3f2fd', 
+                          px: 1, 
+                          py: 0.5, 
+                          borderRadius: 0.5,
+                          fontFamily: 'monospace'
+                        }}>
+                          {parentId}
+                        </Typography>
+                        <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
+                          ({parentField?.label})
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        onClick={() => copyToClipboard(parentId)}
+                        title="Copy field ID"
+                        sx={{ ml: 1 }}
+                      >
+                        <CopyIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+            
             <TextField
               fullWidth
               label="Derivation Formula"
               value={field.derivationFormula || ''}
-              onChange={(e) => updateField({ derivationFormula: e.target.value })}
-              helperText="Example: parent1 + parent2, or calculateAge(parent1)"
+              onChange={(e) => {
+                updateField({ derivationFormula: e.target.value });
+                validateFormula(e.target.value);
+              }}
+              onBlur={(e) => validateFormula(e.target.value)}
+              error={!!formulaError}
+              helperText={
+                formulaError || 
+                (field.parentFields && field.parentFields.length > 0 
+                  ? `Mathematical: ${field.parentFields[0]} + ${field.parentFields[1] || '10'} | Age: calculateAge(${field.parentFields[0]}) | String: ${field.parentFields[0]} + " suffix"`
+                  : "Select parent fields first, then use their IDs in your formula")
+              }
+              multiline
+              rows={2}
+              placeholder="Examples:&#10;• Math: field1 + field2 * 100&#10;• Age: calculateAge(birthDateField)&#10;• String: field1 + ' - ' + field2"
             />
           </Box>
         )}

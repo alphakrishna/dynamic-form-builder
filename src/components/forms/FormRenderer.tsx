@@ -45,23 +45,19 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form }) => {
     dispatch(updateFormField({ fieldId, value }));
   };
 
-  // NEW HELPER FUNCTION: Get maxLength from field validations
   const getMaxLength = (field: FormField): number | undefined => {
     const maxLengthValidation = field.validations?.find(v => v.type === 'maxLength');
     return maxLengthValidation?.value ? Number(maxLengthValidation.value) : undefined;
   };
 
-  // NEW HELPER FUNCTION: Handle input with maxLength restriction
   const handleInputWithMaxLength = (field: FormField, newValue: string) => {
     const maxLength = getMaxLength(field);
     if (maxLength && newValue.length > maxLength) {
-      // Option A: Hard stop - don't allow input beyond maxLength
       return;
     }
     handleFieldChange(field.id, newValue);
   };
 
-  // NEW HELPER FUNCTION: Generate character counter helper text
   const getHelperTextWithCounter = (field: FormField, value: string, error?: string): string => {
     const maxLength = getMaxLength(field);
     if (!maxLength) {

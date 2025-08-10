@@ -88,7 +88,6 @@
         };
       },
       
-      // Add the new reorderFormFields action
       reorderFormFields: (state, action: PayloadAction<{ sourceIndex: number, destinationIndex: number }>) => {
         if (!state.currentForm) return;
         

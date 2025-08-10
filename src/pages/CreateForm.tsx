@@ -170,10 +170,10 @@ const CreateForm: React.FC = () => {
         </Box>
       </Box>
 
+      <Typography variant="h6" gutterBottom>
+        Form Title
+      </Typography>
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Form Title
-        </Typography>
         <TextField
           fullWidth
           label="Form Title"

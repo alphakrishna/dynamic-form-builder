@@ -5,11 +5,12 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
 
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import { RootState } from '../store';
-import { createNewForm, addFieldToCurrentForm, reorderFormFields } from '../store/slices/formBuilderSlice';
+import { createNewForm, addFieldToCurrentForm, reorderFormFields, setCurrentForm } from '../store/slices/formBuilderSlice';
 import { FormField } from '../types/form.types';
 import FieldConfig from '../components/forms/FieldConfig';
 import SaveFormDialog from '../components/forms/SaveFormDialog';
@@ -81,6 +82,15 @@ const CreateForm: React.FC = () => {
       dispatch(createNewForm());
     }
   }, [dispatch, currentForm]);
+
+  const updateFormName = (name: string) => {
+    if (currentForm) {
+      dispatch(setCurrentForm({
+        ...currentForm,
+        name
+      }));
+    }
+  };
 
   const addField = () => {
     const newField: FormField = {
@@ -160,6 +170,19 @@ const CreateForm: React.FC = () => {
         </Box>
       </Box>
 
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Form Title
+        </Typography>
+        <TextField
+          fullWidth
+          label="Form Title"
+          value={currentForm?.name || ''}
+          onChange={(e) => updateFormName(e.target.value)}
+          placeholder="Enter a name for your form"
+        />
+      </Paper>
+
       {!currentForm || currentForm.fields.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: 'center', bgcolor: '#f9f9f9' }}>
           <Typography variant="h6" color="textSecondary">
@@ -173,25 +196,30 @@ const CreateForm: React.FC = () => {
           </Button>
         </Paper>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={currentForm.fields.map(field => field.id)}
-            strategy={verticalListSortingStrategy}
+        <>
+          <Typography variant="h6" gutterBottom>
+            Form Fields
+          </Typography>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            {currentForm.fields.map((field, index) => (
-              <SortableFieldItem
-                key={field.id}
-                field={field}
-                index={index}
-                allFields={currentForm.fields}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
+            <SortableContext
+              items={currentForm.fields.map(field => field.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {currentForm.fields.map((field, index) => (
+                <SortableFieldItem
+                  key={field.id}
+                  field={field}
+                  index={index}
+                  allFields={currentForm.fields}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </>
       )}
 
       <SaveFormDialog

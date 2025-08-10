@@ -72,6 +72,7 @@ const MyForms: React.FC = () => {
                   <Typography variant="h6" gutterBottom noWrap>
                     {form.name}
                   </Typography>
+                  
                   <Typography color="textSecondary" variant="body2" gutterBottom>
                     Created: {new Date(form.createdAt).toLocaleDateString()}
                   </Typography>
@@ -79,14 +80,15 @@ const MyForms: React.FC = () => {
                     {form.fields.length} field{form.fields.length !== 1 ? 's' : ''}
                   </Typography>
                   
-                  {form.fields.some(f => f.isDerived) && (
-                    <Chip 
-                      label="Has Derived Fields" 
-                      size="small" 
-                      color="primary" 
-                      sx={{ mt: 1 }}
-                    />
-                  )}
+                  <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {form.fields.some(f => f.isDerived) && (
+                      <Chip 
+                        label="Has Derived Fields" 
+                        size="small" 
+                        color="primary"
+                      />
+                    )}
+                  </Box>
                 </CardContent>
                 <Box sx={{ p: 2, pt: 0 }}>
                   <Button
